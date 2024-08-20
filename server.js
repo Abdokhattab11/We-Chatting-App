@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const app = require('./app')
+
 
 require('dotenv').config()
 const redisClient = require('./services/redisService')
