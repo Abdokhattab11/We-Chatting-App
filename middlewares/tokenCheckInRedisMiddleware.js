@@ -2,7 +2,7 @@ const redisClient = require('../services/redisService')
 const getTokenFromHeader = require('../utils/getTokenFromHeader');
 
 const tokenCheckInRedisMiddleware = async (req, res, next) => {
-    if (req.path === "/api/v1/auth/login" || req.path === "/api/v1/auth/register") {
+    if (req.path === "/api/v1/auth/login" || req.path === "/api/v1/auth/signup") {
         next();
         return;
     }
