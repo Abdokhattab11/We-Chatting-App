@@ -1,22 +1,22 @@
-const slugify = require("slugify");
 const bcrypt = require("bcryptjs");
 
 const validator = require("express-validator");
-const validatorMiddleWare = require("../../middlesWares/validatorMiddleWare");
+const validatorMiddleWare = require("../../middlewares/validatorMiddleWare");
 const User = require("../../models/userModel");
-exports.getUserValidator = [
-  validator.check("id").isMongoId().withMessage("invalid User id format"),
-  validatorMiddleWare,
-];
+
 exports.signUpValidator = [
   validator
-    .check("name")
+    .check("firstName")
     .notEmpty()
-    .withMessage("a User must have name")
-    .custom((val, { req }) => {
-      req.body.slug = slugify(val);
-      return true;
-    }),
+    .withMessage("a User must have name a first name")
+    .isLength({ min: 3, max: 50 })
+    .withMessage("user firstName must be in range 3-50 letter"),
+  validator
+    .check("lastName")
+    .notEmpty()
+    .withMessage("a User must have name a last name")
+    .isLength({ min: 3, max: 50 })
+    .withMessage("user lastName must be in range 3-50 letter"),
   validator
     .check("email")
     .notEmpty()
@@ -34,7 +34,8 @@ exports.signUpValidator = [
     .check("password")
     .notEmpty()
     .withMessage("password is required")
-    .isLength({ min: 8 }),
+    .isLength({ min: 8 })
+    .withMessage("password must be at least 6 characters"),
   validator
     .check("confirmPassword")
     .notEmpty()
