@@ -13,12 +13,13 @@ exports.signUp = asyncHandler(async (req, res, next) => {
         email: email,
         password: password,
     });
-    
+
     const token = createToken(user._id);
 
     //-------------------------
     // Adding The Generated Token to Redis Cache with user._id
-    await redisClient.set(token, user._id);
+    await redisClient.set(token, user._id.toString());
+    console.log("Token Added To Redis Cache : " + user._id.toString());
     //-------------------------
 
     res.status(201).json({

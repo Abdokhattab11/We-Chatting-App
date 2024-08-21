@@ -6,7 +6,7 @@ const CustomError = require("../utils/CustomError");
 
 exports.getUserInfo = asyncHandler(async (req, res, next) => {
 
-    const userId = redisClient.get(req.cachedToken);
+    const userId = await redisClient.get(req.cachedToken);
     const user = await userModel.findById(userId);
 
     if (!user) {
