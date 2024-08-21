@@ -5,14 +5,14 @@ require("dotenv").config();
 const redisClient = require("./services/redisService");
 
 // Connect To Redis Client
-redisClient
-  .connect()
-  .then((r) => {
-    console.log("Redis Server is connected");
-  })
-  .catch(() => {
-    console.log("Error Connecting to Redis");
-  });
+// redisClient
+//   .connect()
+//   .then((r) => {
+//     console.log("Redis Server is connected");
+//   })
+//   .catch((err) => {
+//     console.log("Error Connecting to Redis", err);
+//   });
 
 mongoose
   .connect(process.env.DB_URL)

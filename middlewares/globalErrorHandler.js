@@ -14,11 +14,11 @@ const sendErrorProduction = (err, res) => {
 };
 
 const globalErrorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Something went wrong";
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || "error";
+  err.message = err.message || "Something went wrong";
   if (process.env.NODE_ENV === "development") sendErrorDev(err, res);
   else {
-    if (err.name === "JsonWebTokenError") err = handleInvalidSignature();
     sendErrorProduction(err, res);
   }
 };

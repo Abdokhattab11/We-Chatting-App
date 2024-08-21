@@ -34,7 +34,7 @@ exports.signUpValidator = [
     .check("password")
     .notEmpty()
     .withMessage("password is required")
-    .isLength({ min: 8 })
+    .isLength({ min: 6 })
     .withMessage("password must be at least 6 characters"),
   validator
     .check("confirmPassword")
