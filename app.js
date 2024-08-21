@@ -1,10 +1,21 @@
-const express = require('express')
-const app = express()
-
-
+const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
+const AppError = require("./utils/CustomError");
+const app = express();
+const authRouter = require("./services/authService");
 app.use(express.json());
-app.use(require('middlewares/tokenCheckInRedisMiddleware'));
+app.use(require("./middlewares/tokenCheckInRedisMiddleware"));
+app.use(cors());
+app.options("*", cors()); // include before other routes
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
 
-app.all('*',require('./middlewares/globalErrorHandler'));
+app.use("/api/v1/auth", authRouter);
+app.all("*", (req, res, next) => {
+  next(new AppError(404, `cant find route in the server :${req.originalUrl}`));
+});
+app.use(require("./middlewares/globalErrorHandler"));
 
-module.exports = app
+module.exports = app;
