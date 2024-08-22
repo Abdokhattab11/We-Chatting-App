@@ -63,7 +63,6 @@ exports.signUp = asyncHandler(async (req, res, next) => {
   res.status(201).json({
     success: true,
     activationToken: hashedActivationToken,
-    activationCode: activationCode,
   });
 });
 
