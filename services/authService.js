@@ -3,6 +3,7 @@ const createToken = require("../utils/jwtUtils");
 const AppError = require("../utils/CustomError");
 const crypto = require("crypto");
 const sharp = require("sharp");
+const jwt = require("jsonwebtoken");
 const sendEmail = require("./../utils/email");
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
 const User = require("../models/userModel");
@@ -23,13 +24,14 @@ exports.signUp = asyncHandler(async (req, res, next) => {
     .createHash("sha256")
     .update(activationCode)
     .digest("hex");
+  //3- generate activation Token
   const activationToken = `${user.email + activationCode}`;
   const hashedActivationToken = crypto
     .createHash("sha256")
     .update(activationToken)
     .digest("hex");
 
-  // save code to user
+  //5 save token and code to user
   user.activationCode = hashedCode;
   user.activationCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
   user.activationToken = hashedActivationToken;
@@ -59,7 +61,7 @@ exports.signUp = asyncHandler(async (req, res, next) => {
     );
   }
 
-  //3- generate activation Token
+  //5-send response
   res.status(201).json({
     success: true,
     activationToken: hashedActivationToken,
@@ -106,5 +108,78 @@ exports.resizeProfileImg = asyncHandler(async (req, res, next) => {
       .toFile(`views/images/userProfiles/${profileImg}`);
     req.body.photo = profileImg;
   }
+  next();
+});
+
+exports.login = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email: email });
+  //1 -check user found in database or not
+  if (!user) {
+    return next(new AppError(404, "no such user with that email"));
+  }
+  //2-check password is correct
+  const match = await user.correctPassword(password, user.password);
+  if (!match) {
+    return next(new AppError(400, "email or password incorrect"));
+  }
+  //3-generate token and send it to client
+  const token = createToken(user._id);
+  //4- send cookie to client
+  res.cookie(`token`, token, {
+    httpOnly: true,
+    maxAge: 90 * 24 * 60 * 60 * 1000, //90 days
+  });
+  res.status(200).json({
+    success: true,
+    user,
+    token,
+  });
+});
+
+exports.protect = asyncHandler(async (req, res, next) => {
+  let token;
+  // console.log(req.cookies);
+  if (
+    //sent in header
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    // sent in cookies
+    token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies) {
+    token = req.cookies.token;
+  }
+  //else if put your code here for redis
+  if (!token) {
+    return next(
+      new AppError(
+        401,
+        "you are not logged in please login to access this route"
+      )
+    );
+  }
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    console.log(err, "invalidated token");
+    return next(new AppError(401, "Invalid token"));
+  }
+  const user = await User.findById(decoded.userId);
+  if (!user) {
+    return next(new AppError(401, "user belong to that token does not exist"));
+  }
+
+  if (user.passwordChangedAt) {
+    const passChangedAtTimeStamp = parseInt(
+      user.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    if (passChangedAtTimeStamp > decoded.iat) {
+      return next(new AppError(401, "password is changed please login again"));
+    }
+  }
+  req.user = user; // for letting user to use protected routes
   next();
 });

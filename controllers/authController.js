@@ -4,8 +4,12 @@ const {
   uploadProfileImg,
   resizeProfileImg,
   activateEmail,
+  login,
 } = require("../services/authService");
-const { signUpValidator } = require("../utils/validators/authValidators");
+const {
+  signUpValidator,
+  loginValidator,
+} = require("../utils/validators/authValidators");
 const router = express.Router();
 
 router.post(
@@ -15,5 +19,6 @@ router.post(
   signUpValidator,
   signUp
 );
+router.post("/login", loginValidator, login);
 router.patch("/activateAccount/:activationToken", activateEmail);
 module.exports = router;
