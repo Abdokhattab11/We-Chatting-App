@@ -40,6 +40,12 @@ const userSchema = new mongoose.Schema(
     activationToken: String,
     // for change password of user
     passwordChangedAt: Date,
+    // for reset password
+    passwordResetCode: String,
+    passwordResetCodeExpires: Date,
+    passwordResetVerificationToken: String,
+    passwordResetCodeVerified: Boolean,
+    passwordResetToken: String,
   },
   { timestamps: true }
 );

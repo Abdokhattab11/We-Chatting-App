@@ -102,7 +102,8 @@ exports.resetPasswordValidator = [
     .check("newPassword")
     .notEmpty()
     .withMessage("password is required")
-    .isLength({ min: 8 }),
+    .isLength({ min: 8 })
+    .withMessage("password must be at least 8 characters"),
   validator
     .check("confirmNewPassword")
     .notEmpty()

@@ -12,7 +12,7 @@ const userRouter = require("./controllers/userController");
 const { protect } = require("./services/authService");
 app.use(cookieParser());
 app.use(express.json());
-app.use(require("./middlewares/tokenCheckInRedisMiddleware"));
+//app.use(require("./middlewares/tokenCheckInRedisMiddleware"));
 app.use(cors());
 app.options("*", cors()); // include before other routes
 if (process.env.NODE_ENV === "development") {
