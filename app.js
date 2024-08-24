@@ -13,7 +13,12 @@ const { protect } = require("./services/authService");
 app.use(cookieParser());
 app.use(express.json());
 //app.use(require("./middlewares/tokenCheckInRedisMiddleware"));
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.options("*", cors()); // include before other routes
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
