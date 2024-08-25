@@ -10,13 +10,10 @@ require("dotenv").config();
 const authRouter = require("./controllers/authController");
 const userRouter = require("./controllers/userController");
 const {protect} = require("./services/authService");
-app.use(cookieParser());
-app.use(express.json());
-app.use(require("./middlewares/tokenCheckInRedisMiddleware"));
 app.use(function (req, res, next) {
 
     // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173/');
 
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -31,6 +28,10 @@ app.use(function (req, res, next) {
     // Pass to next layer of middleware
     next();
 });
+app.use(cookieParser());
+app.use(express.json());
+app.use(require("./middlewares/tokenCheckInRedisMiddleware"));
+
 app.options("*", cors()); // include before other routes
 if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));
