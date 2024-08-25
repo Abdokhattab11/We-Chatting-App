@@ -3,7 +3,8 @@ const getTokenFromHeader = require('../utils/getTokenFromHeader');
 const CustomError = require("../utils/CustomError");
 
 const tokenCheckInRedisMiddleware = async (req, res, next) => {
-    if (req.path.startWith("/api/v1/auth")) {
+    const pathUrl = req.path.toString();
+    if (pathUrl.startWith("/api/v1/auth")) {
         next();
         return;
     }
