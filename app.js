@@ -11,10 +11,10 @@ const authRouter = require("./controllers/authController");
 const userRouter = require("./controllers/userController");
 const {protect} = require("./services/authService");
 const corsOptions = {
-    origin: '*',
-    credentials: true,            //access-control-allow-credentials:true
+    origin: "http://localhost:5173",
+    credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
-}
+};
 
 app.use(cors(corsOptions)) // Use this after the variable declaration
 app.use(cookieParser());
