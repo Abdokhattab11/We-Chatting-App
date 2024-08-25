@@ -4,6 +4,12 @@ const redisClient = require("../services/redisService");
 const userModel = require("../models/userModel");
 const CustomError = require("../utils/CustomError");
 
+/**
+ * @desc Get user info
+ * @param name
+ * @param id
+ * @returns String
+ * */
 exports.getUserInfo = asyncHandler(async (req, res, next) => {
 
     const userId = await redisClient.get(req.cachedToken);
