@@ -4,7 +4,7 @@ const CustomError = require("../utils/CustomError");
 
 const tokenCheckInRedisMiddleware = async (req, res, next) => {
     const pathUrl = req.path.toString();
-    if (pathUrl.startWith("/api/v1/auth")) {
+    if (pathUrl.startsWith("/api/v1/auth")) {
         next();
         return;
     }
