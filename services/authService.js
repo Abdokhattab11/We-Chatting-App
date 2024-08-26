@@ -380,6 +380,9 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 });
 
 exports.logOut = asyncHandler(async (req, res, next) => {
+  if (!req.cookies.token) {
+    return next(new AppError(401, "you are not logged in"));
+  }
   res.clearCookie("token");
   res.status(200).json({
     success: true,
