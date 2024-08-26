@@ -26,7 +26,13 @@ exports.signUpValidator = [
     .custom(async (val) => {
       const user = await User.findOne({ email: val });
       if (user) {
-        throw new Error("email already exists");
+        if (!user.activated)
+          throw new Error(
+            "email already exists but not activated please go to login page to activate your email "
+          );
+        else {
+          throw new Error("email already exists and activated");
+        }
       }
       return true;
     }),

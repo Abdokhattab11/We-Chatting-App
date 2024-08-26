@@ -4,6 +4,7 @@ const AppError = require("../utils/CustomError");
 const crypto = require("crypto");
 const sharp = require("sharp");
 const jwt = require("jsonwebtoken");
+const redisClient = require("../services/redisService");
 const sendEmail = require("./../utils/email");
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
 const User = require("../models/userModel");
@@ -196,6 +197,7 @@ exports.login = asyncHandler(async (req, res, next) => {
       httpOnly: true,
       maxAge: 90 * 24 * 60 * 60 * 1000, //90 days
     });
+    await redisClient.set("token", token);
     res.status(200).json({
       success: true,
       user,
@@ -216,7 +218,10 @@ exports.protect = asyncHandler(async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
   } else if (req.cookies) {
     token = req.cookies.token;
+  } else if (req.cachedToken) {
+    token = req.cachedToken;
   }
+
   //else if put your code here for redis
   if (!token) {
     return next(
