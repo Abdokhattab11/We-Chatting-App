@@ -57,6 +57,7 @@ exports.updateUserInfo = asyncHandler(async (req, res, next) => {
 
 exports.deleteUser = asyncHandler(async (req, res, next) => {
     const userId = await redisClient.get(req.cachedToken);
+    await redisClient.del(req.cachedToken);
     await userModel.findByIdAndDelete(userId);
     res.status(200).json({
         success: true
