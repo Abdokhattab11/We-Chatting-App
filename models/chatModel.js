@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const messageModel = require('./messageModel');
 
 const chatSchema = new mongoose.Schema(
     {
@@ -7,6 +8,7 @@ const chatSchema = new mongoose.Schema(
             require: true,
             unique: true
         },
+        messages: [messageModel.schema],
         user1: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

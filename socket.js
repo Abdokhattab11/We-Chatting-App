@@ -1,12 +1,14 @@
 const socketIo = require('socket.io');
 
 const userModel = require("./models/userModel");
+const messageModel = require("./models/messageModel")
 const roomModel = require("./models/chatModel");
 const redisClient = require('./services/redisService');
 const uuid = require('./utils/uuid')
 
 
 module.exports = (server) => {
+
     const io = socketIo(server, {
         cors: {
             origin: true,
@@ -25,33 +27,71 @@ module.exports = (server) => {
             socket.userId = userId;
             await redisClient.set(userId, socket.id);
         });
-        socket.on('create_room', async (creatorInfo) => {
-            const {senderId, receiverId} = creatorInfo;
+        socket.on('join_create_room', async (creatorInfo) => {
 
-            const roomId = "1"
+            const {senderId, receiverId} = creatorInfo;
 
             const user1 = await userModel.findById(senderId);
             const user2 = await userModel.findById(receiverId);
 
+            // check if there's a room between these two users
+            let room = await roomModel.findOne({user1: user1, user2: user2});
 
-            // Make User 1 Join Room
+            // Create room data
+            if (room) {
+                console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
+            } else {
+                console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
+                room = new roomModel({
+                    roomExternalId: uuid(),
+                    user1: user1._id,
+                    user2: user2._id,
+                });
+            }
+            const roomId = room.roomExternalId;
+
+            // Make The Other User To Create the Room
             socket.join(roomId);
             const receiverSocketId = await redisClient.get(receiverId);
-
             io.sockets.sockets.get(receiverSocketId).join(roomId);
 
-            const roomDate = await roomModel.create({
-                roomExternalId: roomId,
-                user1: user1._id,
-                user2: user2._id,
-            });
-            console.log(`Chat Room ID : ${roomId}`);
-            console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
+            await room.save();
+
+            // Send Back To The Client Room information
+            socket.emit('room_created', room);
+
         });
-        socket.on('message', (messageData) => {
-            console.log(messageData.roomId);
-            console.log(messageData.content)
+        socket.on('message', async (messageData) => {
+            // We Need Content and roomId
+            
+            const senderUser = await userModel.findById(messageData.senderId);
+            const receiverUser = await userModel.findById(messageData.receiverId);
+            const room = await roomModel.find({roomExternalId: roomId});
+
+            // Create & Save Message into Database
+            const message = new messageModel({
+                sender: senderUser,
+                receiver: receiverUser,
+                content: messageDate.content,
+                sentAt: Date.now
+            });
+
+            // Send Message Data to all
+
             io.to(messageData.roomId).emit('message', messageData);
+
+            // If Message Send to the database -> mark sent as true
+            message.isSent = true;
+            // Append This Message to roomId
+            room.messages.push(message);
+            await room.save();
+
+            /**
+             * TODO : Client must Handle Delivered state and Seen from this side
+             * DETAILS : GAD will emit delivered or seen state, then i will listen to this event
+             * and once they are emitted we will update database states
+             * */
+
         })
         socket.on('check_room', (roomId) => {
             // Get the set of sockets connected to the room
