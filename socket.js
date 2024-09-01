@@ -44,8 +44,8 @@ module.exports = (server) => {
                 console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
                 room = new roomModel({
                     roomExternalId: uuid(),
-                    user1: user1._id,
-                    user2: user2._id,
+                    user1: user1,
+                    user2: user2,
                 });
             }
             const roomId = room.roomExternalId;
@@ -53,27 +53,29 @@ module.exports = (server) => {
             // Make The Other User To Create the Room
             socket.join(roomId);
             const receiverSocketId = await redisClient.get(receiverId);
-            io.sockets.sockets.get(receiverSocketId).join(roomId);
+            const receiverSocket = io.sockets.sockets.get(receiverSocketId)
+            receiverSocket.join(roomId);
 
             await room.save();
 
             // Send Back To The Client Room information
+            receiverSocket.emit('room_created', room);
             socket.emit('room_created', room);
 
         });
         socket.on('message', async (messageData) => {
             // We Need Content and roomId
-            
+
             const senderUser = await userModel.findById(messageData.senderId);
             const receiverUser = await userModel.findById(messageData.receiverId);
-            const room = await roomModel.find({roomExternalId: roomId});
+            const room = await roomModel.findOne({roomExternalId: messageData.roomId});
 
             // Create & Save Message into Database
             const message = new messageModel({
                 sender: senderUser,
                 receiver: receiverUser,
-                content: messageDate.content,
-                sentAt: Date.now
+                content: messageData.content,
+                sentAt: Date.now()
             });
 
             // Send Message Data to all
@@ -82,6 +84,7 @@ module.exports = (server) => {
 
             // If Message Send to the database -> mark sent as true
             message.isSent = true;
+            await message.save();
             // Append This Message to roomId
             room.messages.push(message);
             await room.save();
@@ -92,20 +95,6 @@ module.exports = (server) => {
              * and once they are emitted we will update database states
              * */
 
-        })
-        socket.on('check_room', (roomId) => {
-            // Get the set of sockets connected to the room
-            const room = io.sockets.adapter.rooms.get(roomId);
-
-            if (room && room.has(socket.id)) {
-                console.log(`Socket ${socket.id} is connected to room ${roomId}`);
-                socket.emit('room_status', {roomId, status: 'connected'});
-            } else {
-                console.log(`Socket ${socket.id} is NOT connected to room ${roomId}`);
-                socket.emit('room_status', {roomId, status: 'not connected'});
-            }
-        });
-        socket.on('join_room', () => {
         })
 
         socket.on('disconnect', async () => {

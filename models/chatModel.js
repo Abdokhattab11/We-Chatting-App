@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const messageModel = require('./messageModel');
+const userModel = require('./userModel');
 
 const chatSchema = new mongoose.Schema(
     {
@@ -10,12 +11,12 @@ const chatSchema = new mongoose.Schema(
         },
         messages: [messageModel.schema],
         user1: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: userModel.schema,
             ref: "User",
             required: [true, "chat must have a userOne"],
         },
         user2: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: userModel.schema,
             ref: "User",
             required: [true, "chat must have a userOne"],
         },
