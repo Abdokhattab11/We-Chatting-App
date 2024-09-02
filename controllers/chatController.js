@@ -1,9 +1,10 @@
 const express = require("express");
 const chatService = require("../services/chatService");
+const { protect } = require("../services/authService");
 
 const chatRouter = express.Router();
 
-chatRouter.route("/")
-    .get().post().put();
+chatRouter.route("/").post(protect, chatService.createChat);
 
-module.exports = chatRouter();
+chatRouter.route("/:chatId").get(protect, chatService.getChat);
+module.exports = chatRouter;
