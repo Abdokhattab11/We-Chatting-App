@@ -9,6 +9,7 @@ const app = express();
 require("dotenv").config();
 const authRouter = require("./controllers/authController");
 const userRouter = require("./controllers/userController");
+const chatRouter = require('./controllers/chatController');
 
 const {protect} = require("./services/authService");
 const corsOptions = {
@@ -30,6 +31,7 @@ if (process.env.NODE_ENV === "development") {
 app.use("/views", express.static(path.join(__dirname, "views")));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/user", userRouter);
+app.use("api/v1/chat", chatRouter)
 app.get("/api/v1/", protect, (req, res, next) => {
     res.status(200).json({
         message: "protected route",
