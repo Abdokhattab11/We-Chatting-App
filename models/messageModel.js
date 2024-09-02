@@ -3,6 +3,9 @@ const userModel = require('./userModel');
 
 const messageSchema = new mongoose.Schema(
     {
+        /**
+         * TODO : Convert Type to normal id to solve performance issues
+         * */
         sender: {
             type: userModel.schema,
             ref: "User",

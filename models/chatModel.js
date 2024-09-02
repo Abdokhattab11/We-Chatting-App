@@ -10,6 +10,11 @@ const chatSchema = new mongoose.Schema(
             unique: true
         },
         messages: [messageModel.schema],
+
+        /**
+         * TODO : Convert Type to normal id to solve performance issues
+         * */
+        
         user1: {
             type: userModel.schema,
             ref: "User",
