@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 const messsageModel = require('./messageModel');
+const userModel = require('./userModel');
 
 const chatSchema = new mongoose.Schema(
     {
         roomExternalId: {
             type: String,
             require: true,
-            unique: true,
         },
         user1: {
             type: mongoose.Schema.Types.ObjectId,

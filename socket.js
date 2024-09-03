@@ -3,6 +3,7 @@ const socketIo = require('socket.io');
 const messageModel = require("./models/messageModel")
 const roomModel = require("./models/chatModel");
 const redisClient = require('./services/redisService');
+const userModel = require('./models/userModel');
 const uuid = require('./utils/uuid')
 
 
@@ -36,7 +37,7 @@ module.exports = (server) => {
             // check if there's a room between these two users
             let room = await roomModel.findOne({user1: senderId, user2: receiverId});
 
-            
+
             // Create room data
             if (room) {
                 console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
