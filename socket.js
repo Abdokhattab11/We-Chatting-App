@@ -1,6 +1,5 @@
 const socketIo = require('socket.io');
 
-const userModel = require("./models/userModel");
 const messageModel = require("./models/messageModel")
 const roomModel = require("./models/chatModel");
 const redisClient = require('./services/redisService');
@@ -31,12 +30,13 @@ module.exports = (server) => {
 
             const {senderId, receiverId} = creatorInfo;
 
-            const user1 = await userModel.findById(senderId);
-            const user2 = await userModel.findById(receiverId);
+            // const user1 = await userModel.findById(senderId);
+            // const user2 = await userModel.findById(receiverId);
 
             // check if there's a room between these two users
-            let room = await roomModel.findOne({user1: user1, user2: user2});
+            let room = await roomModel.findOne({user1: senderId, user2: receiverId});
 
+            
             // Create room data
             if (room) {
                 console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
@@ -44,8 +44,8 @@ module.exports = (server) => {
                 console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
                 room = new roomModel({
                     roomExternalId: uuid(),
-                    user1: user1,
-                    user2: user2,
+                    user1: senderId,
+                    user2: receiverId,
                 });
             }
             const roomId = room.roomExternalId;
@@ -66,25 +66,27 @@ module.exports = (server) => {
         socket.on('message', async (messageData) => {
             // We Need Content and roomId
 
-            const senderUser = await userModel.findById(messageData.senderId);
-            const receiverUser = await userModel.findById(messageData.receiverId);
-            const room = await roomModel.findOne({roomExternalId: messageData.roomId});
+            const {senderId, receiverId, roomId, content} = messageData;
+
+            // const senderUser = await userModel.findById(messageData.senderId);
+            // const receiverUser = await userModel.findById(messageData.receiverId);
+            const room = await roomModel.findOne({roomExternalId: roomId});
 
             // Create & Save Message into Database
             const message = new messageModel({
-                sender: senderUser,
-                receiver: receiverUser,
-                content: messageData.content,
+                sender: senderId,
+                receiver: receiverId,
+                content: content,
                 sentAt: Date.now()
             });
 
             // Send Message Data to all
 
-            io.to(messageData.roomId).emit('message', messageData);
+            io.to(roomId).emit('message', messageData);
+
 
             // If Message Send to the database -> mark sent as true
             message.isSent = true;
-            await message.save();
             // Append This Message to roomId
             room.messages.push(message);
             await room.save();
