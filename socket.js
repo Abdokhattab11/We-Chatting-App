@@ -43,21 +43,19 @@ module.exports = (server) => {
                 console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
             } else {
                 console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
-                room = new roomModel({
+                room = await roomModel.create({
                     roomExternalId: uuid(),
                     user1: senderId,
                     user2: receiverId,
                 });
             }
-            const roomId = room.roomExternalId;
+            const roomId = room._id.toString();
 
             // Make The Other User To Create the Room
             socket.join(roomId);
             const receiverSocketId = await redisClient.get(receiverId);
             const receiverSocket = io.sockets.sockets.get(receiverSocketId)
             receiverSocket.join(roomId);
-
-            await room.save();
 
             // Send Back To The Client Room information
             receiverSocket.emit('room_created', room);
@@ -69,9 +67,8 @@ module.exports = (server) => {
 
             const {senderId, receiverId, roomId, content} = messageData;
 
-            // const senderUser = await userModel.findById(messageData.senderId);
-            // const receiverUser = await userModel.findById(messageData.receiverId);
-            const room = await roomModel.findOne({roomExternalId: roomId});
+
+            const room = await roomModel.findById(roomId);
 
             // Create & Save Message into Database
             const message = new messageModel({
@@ -84,7 +81,6 @@ module.exports = (server) => {
             // Send Message Data to all
 
             io.to(roomId).emit('message', messageData);
-
 
             // If Message Send to the database -> mark sent as true
             message.isSent = true;
