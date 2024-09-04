@@ -8,4 +8,6 @@ userRouter.route("/")
     .put(userService.updateUserInfo)
     .delete(userService.deleteUser);
 
+userRouter.route("/search/").get(userService.searchForUsersByName);
+
 module.exports = userRouter;

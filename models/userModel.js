@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema(
     {timestamps: true}
 );
 
+userSchema.virtual('fullName').get(function () {
+    return `${this.firstName} ${this.lastName}`;
+
+});
+
 //this is for hashing password before saving it in data base
 
 userSchema.pre("save", async function (next) {

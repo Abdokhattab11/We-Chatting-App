@@ -2,12 +2,6 @@ const asyncHandler = require("express-async-handler");
 const redisClient = require('./redisService')
 const chatModel = require("../models/chatModel");
 
-exports.getChat = asyncHandler(async (req, res, next) => {
-    const {chatId} = req.params;
-    const chat = await Chat.findById(chatId);
-    res.status(200).json({success: true, chat});
-});
-
 /**
  * Description : get all chats of logged in user
  * */
@@ -23,8 +17,23 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
         .find({$or: [{user1: userId}, {user2: userId}]})
         .sort({lastSendMessageTime: -1});
 
-    req.status(200).json({
+    res.status(200).json({
         status: "Success",
         chats
     })
-})
+});
+
+exports.getChatById = asyncHandler(async (req, res, next) => {
+    // First Make Sure the chat User Is Requesting Belong to this user
+    const token = req.cookies.token;
+    const userId = await redisClient.get(token);
+    const chatId = req.params.chatId;
+
+    const chat = await chatModel.findById(chatId);
+
+    res.status(200).json({
+        status: "success",
+        chat
+    })
+
+});

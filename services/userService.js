@@ -55,6 +55,27 @@ exports.updateUserInfo = asyncHandler(async (req, res, next) => {
 
 });
 
+exports.searchForUsersByName = asyncHandler(async (req, res, next) => {
+    const searchString = req.query.name;
+    const users = await userModel.find({
+        $or: [
+            {
+                $expr: {
+                    $regexMatch: {
+                        input: {$concat: ["$firstName", " ", "$lastName"]},
+                        regex: searchString,
+                        options: 'i' // case-insensitive
+                    }
+                }
+            }
+        ]
+    }).select("_id firstName lastName photo email createdAt");
+    res.status(200).json({
+        status: "success",
+        users
+    })
+})
+
 exports.deleteUser = asyncHandler(async (req, res, next) => {
     const userId = await redisClient.get(req.cachedToken);
     await redisClient.del(req.cachedToken);
