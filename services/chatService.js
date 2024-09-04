@@ -13,6 +13,7 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
      * TODO: This Query Needed To Be optimized
      * */
 
+
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
         .sort({lastSendMessageTime: -1});

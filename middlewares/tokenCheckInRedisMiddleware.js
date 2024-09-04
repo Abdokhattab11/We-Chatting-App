@@ -20,6 +20,7 @@ const tokenCheckInRedisMiddleware = async (req, res, next) => {
         next(new CustomError(401, "Token Not Exist In Redis"));
         return;
     }
+    req.cookies.token = token;
     next();
 };
 

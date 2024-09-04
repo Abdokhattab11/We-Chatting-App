@@ -27,6 +27,10 @@ module.exports = (server) => {
             socket.userId = userId;
             await redisClient.set(userId, socket.id);
         });
+
+        socket.on('is_online', async () => {
+        });
+
         socket.on('join_create_room', async (creatorInfo) => {
 
             const {senderId, receiverId} = creatorInfo;
@@ -36,7 +40,6 @@ module.exports = (server) => {
 
             // check if there's a room between these two users
             let room = await roomModel.findOne({user1: senderId, user2: receiverId});
-
 
             // Create room data
             if (room) {
@@ -67,7 +70,10 @@ module.exports = (server) => {
 
             const {senderId, receiverId, roomId, content} = messageData;
 
-
+            /**
+             * TODO: Do we really needs to fetch room first ?
+             * As it's time consuimg and effects the perfomance
+             * */
             const room = await roomModel.findById(roomId);
 
             // Create & Save Message into Database
@@ -79,11 +85,12 @@ module.exports = (server) => {
             });
 
             // Send Message Data to all
-
             io.to(roomId).emit('message', messageData);
+            /**
+             * isSent will be handled from front-end side as well
+             * */
+            // message.isSent = true;
 
-            // If Message Send to the database -> mark sent as true
-            message.isSent = true;
             // Append This Message to roomId
             room.messages.push(message);
             await room.save();
@@ -95,6 +102,13 @@ module.exports = (server) => {
              * */
 
         })
+
+        socket.on('message_is_sent', async () => {
+        });
+        socket.on('message_is_delivered', async () => {
+        });
+        socket.on('message_is_seen', async () => {
+        });
 
         socket.on('disconnect', async () => {
             console.log(`Socket ${socket.id} is disconnected to the server`);
