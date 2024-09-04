@@ -20,8 +20,6 @@ const tokenCheckInRedisMiddleware = async (req, res, next) => {
         next(new CustomError(401, "Token Not Exist In Redis"));
         return;
     }
-    req.cachedToken = token;
-    // Add new Attribute to Req to save the token
     next();
 };
 

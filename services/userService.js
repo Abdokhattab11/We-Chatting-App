@@ -12,29 +12,25 @@ const CustomError = require("../utils/CustomError");
  * */
 exports.getUserInfo = asyncHandler(async (req, res, next) => {
 
-    const userId = await redisClient.get(req.cachedToken);
-    const user = await userModel.findById(userId);
+    const token = req.cookies.token;
+    const userId = await redisClient.get(token);
+    const user = await userModel
+        .findById(userId)
+        .select("_id firstName lastName photo email createdAt")
     if (!user) {
         next(new CustomError(404, "User Not Found"));
         return;
     }
-    const getUserObj = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        photo: user.photo,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-    }
 
     res.status(200).json({
         success: true,
-        getUserObj,
+        user,
     });
 });
 
 exports.updateUserInfo = asyncHandler(async (req, res, next) => {
-    const userId = await redisClient.get(req.cachedToken);
+    const token = req.cookies.token;
+    const userId = await redisClient.get(token);
     const user = await userModel.findByIdAndUpdate(userId, req.body, {
         new: true,
         runValidators: true,
@@ -77,8 +73,9 @@ exports.searchForUsersByName = asyncHandler(async (req, res, next) => {
 })
 
 exports.deleteUser = asyncHandler(async (req, res, next) => {
-    const userId = await redisClient.get(req.cachedToken);
-    await redisClient.del(req.cachedToken);
+    const token = req.cookies.token;
+    const userId = await redisClient.get(token);
+    await redisClient.del(token);
     await userModel.findByIdAndDelete(userId);
     res.status(200).json({
         success: true
