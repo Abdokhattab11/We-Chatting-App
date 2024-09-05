@@ -57,9 +57,17 @@ module.exports = (server) => {
             // Make The Other User To Create the Room
             socket.join(roomId);
             const receiverSocketId = await redisClient.get(receiverId);
-            const receiverSocket = io.sockets.sockets.get(receiverSocketId)
-            receiverSocket.join(roomId);
+            const receiverSocket = io.sockets.sockets.get(receiverSocketId);
 
+            // Handle if user is not connected to a socket
+            if (!receiverSocket) {
+                // Return to the connected socket room info only
+                socket.emit('room_created', room);
+                return;
+            }
+
+            // Else Make 2 sockets connect to the same room
+            receiverSocket.join(roomId);
             // Send Back To The Client Room information
             receiverSocket.emit('room_created', room);
             socket.emit('room_created', room);
