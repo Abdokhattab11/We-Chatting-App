@@ -16,7 +16,8 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
 
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
-        .sort({lastSendMessageTime: -1});
+        .sort({lastSendMessageTime: -1})
+        .select("_id user1 user2 lastSendMessageTime");
 
     res.status(200).json({
         status: "Success",
@@ -32,9 +33,16 @@ exports.getChatById = asyncHandler(async (req, res, next) => {
 
     const chat = await chatModel.findById(chatId);
 
+    if (!chat) {
+        res.status(404).json({
+            status: "Not Found"
+        })
+    }
+
     res.status(200).json({
         status: "success",
         chat
     })
+
 
 });
