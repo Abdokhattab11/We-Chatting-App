@@ -50,12 +50,12 @@ module.exports = (server) => {
              * we need to get roomId from the front-end, and if it's null -> then create a new room
              * And in both cases we will me two sockets join the room by it's id
              * */
-            
-            // let room = await roomModel.findOne({user1: senderId, user2: receiverId});
 
+            let room;
             // Create room data
             if (roomId) {
                 console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
+                room = await roomModel.findOne({user1: senderId, user2: receiverId});
             } else {
                 console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
                 room = await roomModel.create({
@@ -149,7 +149,7 @@ module.exports = (server) => {
             } catch (err) {
                 console.log("Error Occurs While Deleting the socket from cache")
             }
-            socket.emit('user_is_offline', userId);
+            socket.emit('user_is_offline', socket.userId);
         })
     });
     return io;

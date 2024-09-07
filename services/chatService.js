@@ -17,7 +17,24 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
         .sort({lastSendMessageTime: -1})
-        .select("_id user1 user2 lastSendMessageTime");
+        .select("_id user1 user2 lastSendMessageTime")
+        .lean();
+
+    for (const chat of chats) {
+        delete chat.lastSeenMessage1;
+        delete chat.lastDeliveredMessage1;
+        delete chat.lastSentMessage1;
+        delete chat.lastSeenMessage2;
+        delete chat.lastDeliveredMessage2;
+        delete chat.lastSentMessage2;
+        if (chat.user1 === userId) {
+            chat.user = chat.user2;
+        } else {
+            chat.user = chat.user1;
+        }
+        delete chat.user1;
+        delete chat.user2;
+    }
 
     res.status(200).json({
         status: "Success",
