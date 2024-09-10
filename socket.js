@@ -122,13 +122,17 @@ module.exports = (server) => {
             const messageIndex = room.messages.findIndex(message => message._id.toString() === messageId.toString());
             try {
                 room.messages[messageIndex].isDelivered = true;
-                await room.save();
+            } catch (e) {
+                console.log(`Message with this ID ${messageId} is not found`);
+            }
+            try {
                 const receiverSocketId = await redisClient.get(receiverId);
                 const receiverSocket = io.sockets.sockets.get(receiverSocketId);
                 receiverSocket.emit('message_delivered', {roomId, ...room.messages[messageIndex].toObject()})
             } catch (e) {
-                console.log(`Message Index : ${messageIndex} Error`);
+                console.log(`The Other User Is not Connected`);
             }
+            await room.save();
 
         });
         socket.on('message_seen', async (messageData) => {
