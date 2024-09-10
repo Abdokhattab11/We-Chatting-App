@@ -19,7 +19,7 @@ const messageSchema = new mongoose.Schema(
         // },
         content: {type: String, required: [true, "a message must have content"]},
         isSeen: {type: Boolean, default: false},
-        isDelivered: Boolean,
+        isDelivered: {type: Boolean, default: false},
         isSent: Boolean,
         sentAt: {type: Date},
     },

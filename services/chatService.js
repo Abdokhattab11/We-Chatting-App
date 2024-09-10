@@ -20,6 +20,11 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
         .select("_id user1 user2 lastSendMessageTime")
         .lean();
 
+    /**
+     * TODO : To Do return last Sent message in the response
+     * TODO : return the number of unseen messages for every chat
+     * */
+
     for (const chat of chats) {
         delete chat.lastSeenMessage1;
         delete chat.lastDeliveredMessage1;

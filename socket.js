@@ -29,15 +29,6 @@ module.exports = (server) => {
             await redisClient.set(userId, socket.id);
         });
 
-        socket.on('is_user_online', async (userId) => {
-            const socketId = await redisClient.get(userId);
-            if (socketId) {
-                socket.emit('user_is_online', userId);
-            } else {
-                socket.emit('user_is_offline', userId);
-            }
-        });
-
         socket.on('join_create_room', async (creatorInfo) => {
 
             const {senderId, receiverId, roomId} = creatorInfo;
@@ -93,6 +84,10 @@ module.exports = (server) => {
         socket.on('message', async (messageData) => {
             // We Need Content and roomId
 
+            /**
+             * TODO : Create a unique collection when that stores the messages of the certain Chat
+             * */
+
             const {senderId, receiverId, roomId, content} = messageData;
 
             const room = await roomModel.findById(roomId);
@@ -106,11 +101,7 @@ module.exports = (server) => {
             });
 
             // Send Message Data to all
-            io.to(roomId).emit('message', messageData);
-
-            /**
-             * isSent will be handled from front-end side as well
-             * */
+            io.to(roomId).emit('message', {roomId, ...message.toObject()});
 
             message.isSent = true;
 
@@ -123,14 +114,18 @@ module.exports = (server) => {
              * DETAILS : GAD will emit delivered or seen state, then i will listen to this event
              * and once they are emitted we will update database states
              * */
+        });
+        socket.on('message_delivered', async (messageData) => {
+            const {roomId, messageId} = messageData;
+            const room = await roomModel.findById(roomId);
+
+            const messageIndex = room.messages.findIndex(message => message._id.toString() === messageId.toString());
+            room.messages[messageIndex].isDelivered = true;
+            await room.save();
 
         });
+        socket.on('message_seen', async (messageData) => {
 
-        socket.on('message_is_sent', async () => {
-        });
-        socket.on('message_is_delivered', async () => {
-        });
-        socket.on('message_is_seen', async () => {
         });
 
         socket.on('disconnect', async () => {
