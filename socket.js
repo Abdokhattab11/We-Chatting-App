@@ -32,18 +32,8 @@ module.exports = (server) => {
         socket.on('join_create_room', async (creatorInfo) => {
 
             const {senderId, receiverId, roomId} = creatorInfo;
-
-            /**
-             * TODO : DO We Really Need to Fetch Room ?
-             * As front-end has a sync state of the rooms the belong to the user when user sign-in
-             *
-             * Abdo : we don't need to fetch the data each time there's a request to join room,
-             * we need to get roomId from the front-end, and if it's null -> then create a new room
-             * And in both cases we will me two sockets join the room by it's id
-             * */
-
             let room;
-            // Create room data
+
             if (roomId) {
                 console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
                 room = await roomModel.findOne({user1: senderId, user2: receiverId});
@@ -100,8 +90,13 @@ module.exports = (server) => {
                 sentAt: Date.now()
             });
 
-            // Send Message Data to all
-            io.to(roomId).emit('message', {roomId, ...message.toObject()});
+            /**
+             * TODO : This line makes, the other user must  be connected to the same room in order to send
+             * */
+                // io.to(roomId).emit('message', {roomId, ...message.toObject()});
+            const receiverSocketId = await redisClient.get(receiverId);
+            const receiverSocket = io.sockets.sockets.get(receiverSocketId);
+            receiverSocket.emit('message', {roomId, ...message.toObject()})
 
             message.isSent = true;
 
