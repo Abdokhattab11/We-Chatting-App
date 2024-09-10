@@ -123,7 +123,7 @@ module.exports = (server) => {
             try {
                 room.messages[messageIndex].isDelivered = true;
                 await room.save();
-                io.to(roomId).emit('message_delivered', {roomId, ...message.toObject()});
+                io.to(roomId).emit('message_delivered', {roomId, ...room.messages[messageIndex].toObject()});
             } catch (e) {
                 console.log(`Message Index : ${messageIndex} Error`);
             }
