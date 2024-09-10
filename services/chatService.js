@@ -27,7 +27,7 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
         delete chat.lastSeenMessage2;
         delete chat.lastDeliveredMessage2;
         delete chat.lastSentMessage2;
-        if (chat.user1 === userId) {
+        if (chat.user1._id.toString() === userId) {
             chat.user = chat.user2;
         } else {
             chat.user = chat.user1;

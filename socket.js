@@ -63,9 +63,7 @@ module.exports = (server) => {
                     user2: receiverId,
                 });
             }
-            // const roomId = room._id.toString();
 
-            // Make The Other User To Create the Room
             socket.join(roomId);
             const receiverSocketId = await redisClient.get(receiverId);
             const receiverSocket = io.sockets.sockets.get(receiverSocketId);
@@ -85,7 +83,9 @@ module.exports = (server) => {
             // Else Make 2 sockets connect to the same room
             receiverSocket.join(roomId);
 
-            // Send Back To The Client Room information
+            /**
+             * Front-end Need to update the view when this event happen
+             * */
             receiverSocket.emit('room_created', room);
             socket.emit('room_created', room);
 
@@ -94,17 +94,6 @@ module.exports = (server) => {
             // We Need Content and roomId
 
             const {senderId, receiverId, roomId, content} = messageData;
-
-            /**
-             * TODO: Do we really needs to fetch room first ?
-             *
-             * Abdo : We Don't need to fetch room every time we send a message
-             * Because We make front-end sync with back-end when it's signed in
-             * And then any change happen in the front-end will be sent to the socket and vice-versa
-             * So Both are sync so we don't need to fetch the room Every time
-             *
-             * We Just need to save the message in the database
-             * */
 
             const room = await roomModel.findById(roomId);
 
@@ -118,10 +107,12 @@ module.exports = (server) => {
 
             // Send Message Data to all
             io.to(roomId).emit('message', messageData);
+
             /**
              * isSent will be handled from front-end side as well
              * */
-            // message.isSent = true;
+
+            message.isSent = true;
 
             // Append This Message to roomId
             room.messages.push(message);
