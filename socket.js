@@ -122,10 +122,16 @@ module.exports = (server) => {
             const messageIndex = room.messages.findIndex(message => message._id.toString() === messageId.toString());
             room.messages[messageIndex].isDelivered = true;
             await room.save();
+            io.to(roomId).emit('message_delivered', {roomId, ...message.toObject()});
 
         });
         socket.on('message_seen', async (messageData) => {
+            const {roomId, messageId} = messageData;
+            const room = await roomModel.findById(roomId);
 
+            const messageIndex = room.messages.findIndex(message => message._id.toString() === messageId.toString());
+            room.messages[messageIndex].isSeen = true;
+            await room.save();
         });
 
         socket.on('disconnect', async () => {
