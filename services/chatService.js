@@ -20,10 +20,6 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
         .populate('lastSentMessage')
         .lean();
 
-    /**
-     * TODO : To Do return last Sent message in the response
-     * TODO : return the number of unseen messages for every chat
-     * */
 
     for (const chat of chats) {
         if (chat.user1._id.toString() === userId) {
@@ -48,12 +44,21 @@ exports.getChatById = asyncHandler(async (req, res, next) => {
     const chatId = req.params.chatId;
 
     const chat = await chatModel.findById(chatId).lean();
-
     if (!chat) {
         res.status(404).json({
             status: "Not Found"
         })
     }
+
+    if (chat.user1._id.toString() !== userId) {
+        chat.user = chat.user1;
+    } else {
+        chat.user = chat.user2;
+    }
+    delete chat.user1;
+    delete chat.user2;
+    delete chat.lastSentMessage;
+
 
     res.status(200).json({
         status: "success",
