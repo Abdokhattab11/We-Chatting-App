@@ -115,7 +115,7 @@ module.exports = (server) => {
 
             await room.save();
             try {
-                const senderSocketId = await redisClient.get(receiverId);
+                const senderSocketId = await redisClient.get(senderId);
                 const senderSocket = io.sockets.sockets.get(senderSocketId);
                 senderSocket.emit('message_delivered', {roomId, ...room.messages[messageIndex].toObject()});
             } catch (e) {
