@@ -102,9 +102,10 @@ module.exports = (server) => {
                 console.log(`Receiver Is Not Connected with ID :  ${receiverId}`)
             }
             try {
+                // To Make Front End Sync with us
                 const senderSocketId = await redisClient.get(senderId);
                 const senderSocket = io.sockets.sockets.get(senderSocketId);
-                senderSocket.emit('message', {roomId, ...message.toObject()})
+                senderSocket.emit('message_is_saved', {roomId, ...message.toObject()})
             } catch (e) {
                 console.log(`Sender If Not Connected With Id : ${senderId}`);
             }
