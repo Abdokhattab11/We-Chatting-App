@@ -89,16 +89,18 @@ module.exports = (server) => {
              * TODO : This line makes, the other user must  be connected to the same room in order to send
              * */
             // io.to(roomId).emit('message', {roomId, ...message.toObject()});
-            try {
-                const receiverSocketId = await redisClient.get(receiverId);
-                const receiverSocket = io.sockets.sockets.get(receiverSocketId);
-                receiverSocket.emit('message', {roomId, ...message.toObject()})
-            } catch (e) {
-                console.log(`User Is Not Connected`)
-            }
+
             message.isSent = true;
             room.messages.push(message);
             await room.save();
+
+            try {
+                const receiverSocketId = await redisClient.get(receiverId);
+                const receiverSocket = io.sockets.sockets.get(receiverSocketId);
+                receiverSocket.emit('message', {roomId, ...message.toObject()});
+            } catch (e) {
+                console.log(`User Is Not Connected`)
+            }
         });
         socket.on('message_delivered', async (messageData) => {
             const {receiverId, roomId, messageId} = messageData;
