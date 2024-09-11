@@ -36,7 +36,7 @@ module.exports = (server) => {
             });
             for (const room of rooms) {
                 for (const message of room.messages) {
-                    if (userId !== message.receiver && !message.isDelivered) {
+                    if (userId === message.receiver && !message.isDelivered) {
                         message.isDelivered = true;
                         const senderId = message.sender.toString();
                         const roomId = room._id.toString();
