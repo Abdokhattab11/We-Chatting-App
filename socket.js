@@ -36,7 +36,7 @@ module.exports = (server) => {
             });
             for (const room of rooms) {
                 for (const message of room.messages) {
-                    if (!message.isDelivered) {
+                    if (userId !== message.receiver && !message.isDelivered) {
                         message.isDelivered = true;
                         const senderId = message.sender.toString();
                         const roomId = room._id.toString();
@@ -89,28 +89,17 @@ module.exports = (server) => {
             socket.emit('room_created', room);
         });
         socket.on('message', async (messageData) => {
-            // We Need Content and roomId
-
-            /**
-             * TODO : Create a unique collection when that stores the messages of the certain Chat
-             * */
 
             const {senderId, receiverId, roomId, content} = messageData;
 
             const room = await roomModel.findById(roomId);
 
-            // Create & Save Message into Database
             const message = new messageModel({
                 sender: senderId,
                 receiver: receiverId,
                 content: content,
                 sentAt: Date.now()
             });
-
-            /**
-             * TODO : This line makes, the other user must  be connected to the same room in order to send
-             * */
-            // io.to(roomId).emit('message', {roomId, ...message.toObject()});
 
             message.isSent = true;
             room.messages.push(message);
@@ -142,7 +131,6 @@ module.exports = (server) => {
             } catch (e) {
                 console.log(`Message with this ID ${messageId} is not found`);
             }
-
             await room.save();
             try {
                 const senderSocketId = await redisClient.get(senderId);
@@ -152,14 +140,28 @@ module.exports = (server) => {
                 console.log(`Sender Is Not Connected ${senderId}`);
             }
         });
-        socket.on('message_seen', async (messageData) => {
-            const {roomId, messageId} = messageData;
-            const room = await roomModel.findById(roomId);
+        socket.on('is_receiver_connected_to_room', async (data) => {
+            // This event will be emitted after is_delivered
+            const {receiverId, roomId, messageId} = data;
+            const room = io.sockets.adapter.rooms.get(roomId);
+            const receiverSocketId = await redisClient.get(receiverId);
 
-            const messageIndex = room.messages.findIndex(message => message._id.toString() === messageId.toString());
-            room.messages[messageIndex].isSeen = true;
-            await room.save();
-        });
+            if (room) {
+                const socketIdsInRoom = Array.from(room);
+                if (socketIdsInRoom.includes(receiverSocketId)) {
+                    // The socket with the specified ID is connected to the room
+                    // Make The Message seen
+                    const room = await roomModel.findById(roomId);
+                    const messageIndex = room.messages.findIndex(message => message._id.toString() === messageId.toString());
+                    if (messageIndex !== -1)
+                        room.messages[messageIndex].isSeen = true;
+                    await room.save();
+                    socket.emit("message_seen", {roomId, ...room.messages[messageIndex].toObject()})
+                } else {
+                    // The socket with the specified ID is not connected to the room
+                }
+            }
+        })
 
         socket.on('disconnect', async () => {
             console.log(`Socket ${socket.id} is disconnected to the server`);
