@@ -58,7 +58,7 @@ module.exports = (server) => {
 
             if (roomId) {
                 console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
-                room = await roomModel.findOne({user1: senderId, user2: receiverId});
+                room = await roomModel.findById(roomId);
             } else {
                 console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
                 room = await roomModel.create({
@@ -66,26 +66,17 @@ module.exports = (server) => {
                     user2: receiverId,
                 });
             }
-
+            console.log(room);
+            for (const message of room.messages) {
+                if (message.receiver.toString() === senderId && !message.isSeen) {
+                    message.isSeen = true;
+                    await room.save();
+                    const senderSocketId = await redisClient.get(message.sender.toString());
+                    const senderSocket = io.sockets.sockets.get(senderSocketId);
+                    senderSocket.emit("message_seen", {roomId, ...message.toObject()})
+                }
+            }
             socket.join(roomId);
-            // const receiverSocketId = await redisClient.get(receiverId);
-            // const receiverSocket = io.sockets.sockets.get(receiverSocketId);
-
-            socket.emit('room_created', room);
-
-            // Handle if user is not connected to a socket
-            // if (!receiverSocket) {
-            //     // Return to the connected socket room info only
-            //     return;
-            // }
-            //
-            // // Else Make 2 sockets connect to the same room
-            // receiverSocket.join(roomId);
-
-            /**
-             * Front-end Need to update the view when this event happen
-             * */
-            // receiverSocket.emit('room_created', room);
             socket.emit('room_created', room);
         });
         socket.on('message', async (messageData) => {
