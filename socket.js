@@ -99,7 +99,14 @@ module.exports = (server) => {
                 const receiverSocket = io.sockets.sockets.get(receiverSocketId);
                 receiverSocket.emit('message', {roomId, ...message.toObject()});
             } catch (e) {
-                console.log(`User Is Not Connected`)
+                console.log(`Receiver Is Not Connected with ID :  ${receiverId}`)
+            }
+            try {
+                const senderSocketId = await redisClient.get(senderId);
+                const senderSocket = io.sockets.sockets.get(senderSocketId);
+                senderSocket.emit('message', {roomId, ...message.toObject()})
+            } catch (e) {
+                console.log(`Sender If Not Connected With Id : ${senderId}`);
             }
         });
         socket.on('message_delivered', async (messageData) => {
