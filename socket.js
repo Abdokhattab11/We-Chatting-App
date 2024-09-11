@@ -112,15 +112,9 @@ module.exports = (server) => {
             } catch (e) {
                 console.log(`Message with this ID ${messageId} is not found`);
             }
-            try {
-                const receiverSocketId = await redisClient.get(receiverId);
-                const receiverSocket = io.sockets.sockets.get(receiverSocketId);
-                receiverSocket.emit('message_delivered', {roomId, ...room.messages[messageIndex].toObject()})
-            } catch (e) {
-                console.log(`The Other User Is not Connected`);
-            }
             await room.save();
 
+            socket.emit('message_delivered', {roomId, ...room.messages[messageIndex].toObject()});
         });
         socket.on('message_seen', async (messageData) => {
             const {roomId, messageId} = messageData;
