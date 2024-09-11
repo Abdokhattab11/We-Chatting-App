@@ -16,8 +16,8 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
 
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
-        .sort({lastSendMessageTime: -1})
-        .select("_id user1 user2 lastSendMessageTime")
+        .select("_id user1 user2 lastSentMessage")
+        .populate('lastSentMessage')
         .lean();
 
     /**
@@ -26,12 +26,6 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
      * */
 
     for (const chat of chats) {
-        delete chat.lastSeenMessage1;
-        delete chat.lastDeliveredMessage1;
-        delete chat.lastSentMessage1;
-        delete chat.lastSeenMessage2;
-        delete chat.lastDeliveredMessage2;
-        delete chat.lastSentMessage2;
         if (chat.user1._id.toString() === userId) {
             chat.user = chat.user2;
         } else {
@@ -53,7 +47,7 @@ exports.getChatById = asyncHandler(async (req, res, next) => {
     const userId = await redisClient.get(token);
     const chatId = req.params.chatId;
 
-    const chat = await chatModel.findById(chatId);
+    const chat = await chatModel.findById(chatId).lean();
 
     if (!chat) {
         res.status(404).json({
