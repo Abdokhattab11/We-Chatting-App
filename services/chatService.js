@@ -8,6 +8,8 @@ exports.createChat = asyncHandler(async (req, res, next) => {
     user1: req.user._id,
     user2: user2,
   });
+  chat.user2 = user2;
+  await chat.save();
   res.status(201).json({ success: true, chat });
 });
 
