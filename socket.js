@@ -27,6 +27,28 @@ module.exports = (server) => {
             socket.userId = userId;
             // Make this user online
             await redisClient.set(userId, socket.id);
+            // Make All Undelivered Messages -> delivered
+            const rooms = await roomModel.find({
+                $or: [
+                    {user1: userId},
+                    {user2: userId}
+                ]
+            });
+            for (const room of rooms) {
+                for (const message of room.messages) {
+                    if (!message.isDelivered) {
+                        message.isDelivered = true;
+                        const senderId = message.sender.toString();
+                        const roomId = room._id.toString();
+                        const senderSocketId = await redisClient.get(senderId);
+                        const senderSocket = io.sockets.sockets.get(senderSocketId);
+                        if (senderSocket) {
+                            senderSocket.emit('message_delivered', {roomId, ...message.toObject()});
+                        }
+                    }
+                }
+                await room.save();
+            }
         });
 
         socket.on('join_create_room', async (creatorInfo) => {
