@@ -34,8 +34,28 @@ module.exports = (server) => {
                     {user2: userId}
                 ]
             });
+
+
             for (const room of rooms) {
-                for (const message of room.messages) {
+                /**
+                 *
+                 * Messages in terms of Delivered will be stored in DB like this : [true, true, true, false, false]
+                 * We Can Apply Binary Search to find first not delivered message and start from it to the end of the messages
+                 * */
+                let start = 0, end = room.messages.length - 1;
+                let ans = end;
+                while (start < end) {
+                    let mid = Math.floor((start + end) / 2);
+                    if (room.messages[mid].isDelivered)
+                        start = mid + 1;
+                    else {
+                        end = mid;
+                        ans = mid;
+                    }
+                }
+                // Will be replaced with a for loop starts from ans to the end of the array
+                for (let i = ans; i < room.messages.length; i++) {
+                    const message = room.messages[i];
                     if (userId === message.receiver.toString() && !message.isDelivered) {
                         message.isDelivered = true;
                         const senderId = message.sender.toString();
@@ -67,15 +87,27 @@ module.exports = (server) => {
                 });
             }
             console.log(room);
-            for (const message of room.messages) {
+            let start = 0, end = room.messages.length - 1;
+            let ans = end;
+            while (start < end) {
+                let mid = Math.floor((start + end) / 2);
+                if (room.messages[mid].isSeen)
+                    start = mid + 1;
+                else {
+                    end = mid;
+                    ans = mid;
+                }
+            }
+            for (let i = ans; i < room.messages.length; i++) {
+                const message = room.messages[i];
                 if (message.receiver.toString() === senderId && !message.isSeen) {
                     message.isSeen = true;
-                    await room.save();
                     const senderSocketId = await redisClient.get(message.sender.toString());
                     const senderSocket = io.sockets.sockets.get(senderSocketId);
                     senderSocket.emit("message_seen", {roomId, ...message.toObject()})
                 }
             }
+            await room.save();
             socket.join(roomId);
             socket.emit('room_created', room);
         });
