@@ -46,30 +46,25 @@ module.exports = (server) => {
             }
 
             socket.join(roomId);
-            const receiverSocketId = await redisClient.get(receiverId);
-            const receiverSocket = io.sockets.sockets.get(receiverSocketId);
-
-            /**
-             * TODO : Change room_created event name to a more realistic name
-             * */
+            // const receiverSocketId = await redisClient.get(receiverId);
+            // const receiverSocket = io.sockets.sockets.get(receiverSocketId);
 
             socket.emit('room_created', room);
 
             // Handle if user is not connected to a socket
-            if (!receiverSocket) {
-                // Return to the connected socket room info only
-                return;
-            }
-
-            // Else Make 2 sockets connect to the same room
-            receiverSocket.join(roomId);
+            // if (!receiverSocket) {
+            //     // Return to the connected socket room info only
+            //     return;
+            // }
+            //
+            // // Else Make 2 sockets connect to the same room
+            // receiverSocket.join(roomId);
 
             /**
              * Front-end Need to update the view when this event happen
              * */
-            receiverSocket.emit('room_created', room);
+            // receiverSocket.emit('room_created', room);
             socket.emit('room_created', room);
-
         });
         socket.on('message', async (messageData) => {
             // We Need Content and roomId
@@ -93,22 +88,17 @@ module.exports = (server) => {
             /**
              * TODO : This line makes, the other user must  be connected to the same room in order to send
              * */
-                // io.to(roomId).emit('message', {roomId, ...message.toObject()});
-            const receiverSocketId = await redisClient.get(receiverId);
-            const receiverSocket = io.sockets.sockets.get(receiverSocketId);
-            receiverSocket.emit('message', {roomId, ...message.toObject()})
-
+            // io.to(roomId).emit('message', {roomId, ...message.toObject()});
+            try {
+                const receiverSocketId = await redisClient.get(receiverId);
+                const receiverSocket = io.sockets.sockets.get(receiverSocketId);
+                receiverSocket.emit('message', {roomId, ...message.toObject()})
+            } catch (e) {
+                console.log(`User Is Not Connected`)
+            }
             message.isSent = true;
-
-            // Append This Message to roomId
             room.messages.push(message);
             await room.save();
-
-            /**
-             * TODO : Client must Handle Delivered state and Seen from this side
-             * DETAILS : GAD will emit delivered or seen state, then i will listen to this event
-             * and once they are emitted we will update database states
-             * */
         });
         socket.on('message_delivered', async (messageData) => {
             const {receiverId, roomId, messageId} = messageData;
