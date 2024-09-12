@@ -83,7 +83,6 @@ module.exports = (server) => {
                 room = await roomModel.create({
                     user1: senderId,
                     user2: receiverId,
-
                 });
             }
             let start = 0, end = room.messages.length - 1;
@@ -108,7 +107,16 @@ module.exports = (server) => {
             }
             await room.save();
             socket.join(roomId);
-            socket.emit('room_created', room);
+            const responseRoom = room.toObject();
+
+            if (receiverId === responseRoom.user1._id)
+                responseRoom.user = responseRoom.user2;
+            else
+                responseRoom.user = responseRoom.user1;
+
+            delete responseRoom.user1;
+            delete responseRoom.user2;
+            socket.emit('room_created', responseRoom);
         });
         socket.on('message', async (messageData) => {
 
