@@ -3,7 +3,10 @@ const socketIo = require('socket.io');
 const messageModel = require("./models/messageModel")
 const roomModel = require("./models/chatModel");
 const redisClient = require('./services/redisService');
+require('./Logger');
+const winston = require("winston");
 
+const log = winston.loggers.add('logger')
 
 module.exports = (server) => {
 
@@ -17,14 +20,13 @@ module.exports = (server) => {
 
     io.on("connection", (socket) => {
         // 1. Handle user authentication
-        console.log(`Socket ${socket.id} is connected to the server`);
-
         socket.on('connect_user', async (userId) => {
+            log.info(`User ${userId} Is Connected To socket ${socket.id}`)
             socket.userId = userId;
             try {
                 await redisClient.set(userId, socket.id);
             } catch (e) {
-                console.log(`Error : Setting UserId to the connected Socket in Redis Causing Error {userId:${userId}, socketId:${socket.id}`);
+                log.error(`Error : Setting UserId to the connected Socket in Redis Causing Error {userId:${userId}, socketId:${socket.id}`);
                 socket.emit('connect_user_error', 'Internal Server Error occurs While Connecting User, Please Reconnect User');
             }
 
@@ -48,7 +50,7 @@ module.exports = (server) => {
                     }
                 }
                 // Will be replaced with a for loop starts from ans to the end of the array
-                for (let i = ans; i < room.messages.length && ans != -1; i++) {
+                for (let i = ans; i < room.messages.length && ans !== -1; i++) {
                     const message = room.messages[i];
                     if (userId === message.receiver.toString() && !message.isDelivered) {
                         message.isDelivered = true;
@@ -59,7 +61,7 @@ module.exports = (server) => {
                             const senderSocket = io.sockets.sockets.get(senderSocketId);
                             senderSocket.emit('message_delivered', {roomId, ...message.toObject()});
                         } catch (e) {
-                            console.log(``)
+                            log.error(`Error Sender Socket is not in redis`)
                             socket.emit('message_delivered_error', 'Error Occurs While Marking Message As Delivered')
                         }
                     }
@@ -74,17 +76,16 @@ module.exports = (server) => {
             let room;
 
             if (roomId) {
-                console.log(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
+                log.info(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
                 room = await roomModel.findById(roomId);
             } else {
-                console.log(`Chat Room Created Between user ${senderId} & ${receiverId}`);
+                log.info(`Chat Room Created Between user ${senderId} & ${receiverId}`);
                 room = await roomModel.create({
                     user1: senderId,
                     user2: receiverId,
 
                 });
             }
-            console.log(room);
             let start = 0, end = room.messages.length - 1;
             let ans = end;
             while (start < end) {
@@ -131,7 +132,7 @@ module.exports = (server) => {
                 const receiverSocket = io.sockets.sockets.get(receiverSocketId);
                 receiverSocket.emit('message', {roomId, ...message.toObject()});
             } catch (e) {
-                console.log(`Receiver Is Not Connected with ID :  ${receiverId}`)
+                log.error(`Receiver Is Not Connected with ID :  ${receiverId}`)
             }
             try {
                 // To Make Front End Sync with us
@@ -139,7 +140,7 @@ module.exports = (server) => {
                 const senderSocket = io.sockets.sockets.get(senderSocketId);
                 senderSocket.emit('message_is_saved', {roomId, ...message.toObject()})
             } catch (e) {
-                console.log(`Sender If Not Connected With Id : ${senderId}`);
+                log.error(`Sender If Not Connected With Id : ${senderId}`);
             }
         });
         socket.on('message_delivered', async (messageData) => {
@@ -150,7 +151,7 @@ module.exports = (server) => {
             try {
                 room.messages[messageIndex].isDelivered = true;
             } catch (e) {
-                console.log(`Message with this ID ${messageId} is not found`);
+                log.error(`Message with this ID ${messageId} is not found`);
             }
             await room.save();
             try {
@@ -158,7 +159,7 @@ module.exports = (server) => {
                 const senderSocket = io.sockets.sockets.get(senderSocketId);
                 senderSocket.emit('message_delivered', {roomId, ...room.messages[messageIndex].toObject()});
             } catch (e) {
-                console.log(`Sender Is Not Connected ${senderId}`);
+                log.error(`Sender Is Not Connected ${senderId}`);
             }
         });
         socket.on('is_receiver_connected_to_room', async (data) => {
@@ -185,14 +186,15 @@ module.exports = (server) => {
         })
 
         socket.on('disconnect', async () => {
-            console.log(`Socket ${socket.id} is disconnected to the server`);
+            if (!socket.userId)
+                return;
             try {
                 await redisClient.del(socket.userId)
-            } catch (err) {
-                console.log("Error Occurs While Deleting the socket from cache")
+                log.info(`User ${socket.userId} Is Disconnected From socket ${socket.id}`);
+            } catch (e) {
+                log.error(`Error Occurs when Deleting user socket : {userId:${socket.userId}, socketId:${socket.id}`);
             }
-            socket.emit('user_is_offline', socket.userId);
-        })
+        });
     });
     return io;
 }
