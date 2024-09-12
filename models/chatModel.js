@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const messsageModel = require('./messageModel');
-const userModel = require('./userModel');
 
 const chatSchema = new mongoose.Schema(
     {
@@ -20,7 +19,7 @@ const chatSchema = new mongoose.Schema(
         },
 
         messages: [messsageModel.schema],
-        lastSentMessage: messsageModel.schema,
+        lastSentMessage: {type: messsageModel.schema, default: null},
 
         createdAt: {
             type: Date,

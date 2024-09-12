@@ -3,8 +3,6 @@ const socketIo = require('socket.io');
 const messageModel = require("./models/messageModel")
 const roomModel = require("./models/chatModel");
 const redisClient = require('./services/redisService');
-const userModel = require('./models/userModel');
-const uuid = require('./utils/uuid')
 
 
 module.exports = (server) => {
@@ -22,12 +20,14 @@ module.exports = (server) => {
         console.log(`Socket ${socket.id} is connected to the server`);
 
         socket.on('connect_user', async (userId) => {
-            console.log(`User of id ${userId} Is connected to this socket`);
-            // 1. Make this socket belong to this userId
             socket.userId = userId;
-            // Make this user online
-            await redisClient.set(userId, socket.id);
-            // Make All Undelivered Messages -> delivered
+            try {
+                await redisClient.set(userId, socket.id);
+            } catch (e) {
+                console.log(`Error : Setting UserId to the connected Socket in Redis Causing Error {userId:${userId}, socketId:${socket.id}`);
+                socket.emit('connect_user_error', 'Internal Server Error occurs While Connecting User, Please Reconnect User');
+            }
+
             const rooms = await roomModel.find({
                 $or: [
                     {user1: userId},
@@ -35,13 +35,7 @@ module.exports = (server) => {
                 ]
             });
 
-
             for (const room of rooms) {
-                /**
-                 *
-                 * Messages in terms of Delivered will be stored in DB like this : [true, true, true, false, false]
-                 * We Can Apply Binary Search to find first not delivered message and start from it to the end of the messages
-                 * */
                 let start = 0, end = room.messages.length - 1;
                 let ans = end;
                 while (start < end) {
@@ -60,10 +54,13 @@ module.exports = (server) => {
                         message.isDelivered = true;
                         const senderId = message.sender.toString();
                         const roomId = room._id.toString();
-                        const senderSocketId = await redisClient.get(senderId);
-                        const senderSocket = io.sockets.sockets.get(senderSocketId);
-                        if (senderSocket) {
+                        try {
+                            const senderSocketId = await redisClient.get(senderId);
+                            const senderSocket = io.sockets.sockets.get(senderSocketId);
                             senderSocket.emit('message_delivered', {roomId, ...message.toObject()});
+                        } catch (e) {
+                            console.log(``)
+                            socket.emit('message_delivered_error', 'Error Occurs While Marking Message As Delivered')
                         }
                     }
                 }
@@ -84,6 +81,7 @@ module.exports = (server) => {
                 room = await roomModel.create({
                     user1: senderId,
                     user2: receiverId,
+
                 });
             }
             console.log(room);
@@ -98,7 +96,7 @@ module.exports = (server) => {
                     ans = mid;
                 }
             }
-            for (let i = ans; i < room.messages.length; i++) {
+            for (let i = ans; i < room.messages.length && ans !== -1; i++) {
                 const message = room.messages[i];
                 if (message.receiver.toString() === senderId && !message.isSeen) {
                     message.isSeen = true;

@@ -16,7 +16,6 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
 
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
-        .select("_id user1 user2 lastSentMessage")
         .populate('lastSentMessage')
         .lean();
 
@@ -57,7 +56,6 @@ exports.getChatById = asyncHandler(async (req, res, next) => {
     }
     delete chat.user1;
     delete chat.user2;
-    delete chat.lastSentMessage;
 
 
     res.status(200).json({
