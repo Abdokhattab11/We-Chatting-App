@@ -18,9 +18,13 @@ module.exports = (server) => {
         }
     });
 
+    const connectedUsers = new Set();
+
     io.on("connection", (socket) => {
         // 1. Handle user authentication
         socket.on('connect_user', async (userId) => {
+            connectedUsers.add(userId);
+            io.emit('update_online_users', Array.from(connectedUsers));
             log.info(`User ${userId} Is Connected To socket ${socket.id}`)
             socket.userId = userId;
             try {
@@ -215,6 +219,8 @@ module.exports = (server) => {
             } catch (e) {
                 log.error(`Error Occurs when Deleting user socket : {userId:${socket.userId}, socketId:${socket.id}`);
             }
+            connectedUsers.delete(socket.userId);
+            io.emit('update_online_users', Array.from(connectedUsers));
         });
     });
     return io;
