@@ -114,8 +114,6 @@ module.exports = (server) => {
             else
                 responseRoom.user = room.user1;
 
-            delete responseRoom.user1;
-            delete responseRoom.user2;
             socket.emit('room_created', responseRoom);
         });
         socket.on('message', async (messageData) => {
