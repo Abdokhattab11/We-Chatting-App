@@ -111,9 +111,9 @@ module.exports = (server) => {
             const responseRoom = room.toObject();
 
             if (receiverId === responseRoom.user1._id)
-                responseRoom.user = room.user2;
-            else
                 responseRoom.user = room.user1;
+            else
+                responseRoom.user = room.user2;
 
             delete responseRoom.user1;
             delete responseRoom.user2;
@@ -194,7 +194,9 @@ module.exports = (server) => {
                 }
             }
         })
+        socket.on('typing', async () => {
 
+        });
         socket.on('disconnect', async () => {
             if (!socket.userId)
                 return;
