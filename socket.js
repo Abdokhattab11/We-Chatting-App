@@ -194,8 +194,17 @@ module.exports = (server) => {
                 }
             }
         })
-        socket.on('typing', async () => {
+        socket.on('im_typing', async (data) => {
+            const {senderId, receiverId, roomId} = data;
 
+            const receiverSocketId = await redisClient.get(receiverId);
+            const receiverSocket = io.sockets.sockets.get(receiverSocketId);
+
+            if (!receiverSocket) {
+                log.warn(`Is Typing Warn, The other User Is Not Connected`)
+                return;
+            }
+            receiverSocket.emit('is_typing', roomId);
         });
         socket.on('disconnect', async () => {
             if (!socket.userId)
