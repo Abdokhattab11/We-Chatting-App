@@ -110,9 +110,9 @@ module.exports = (server) => {
             const responseRoom = room.toObject();
 
             if (receiverId === responseRoom.user1._id)
-                responseRoom.user = responseRoom.user2;
+                responseRoom.user = room.user2;
             else
-                responseRoom.user = responseRoom.user1;
+                responseRoom.user = room.user1;
 
             delete responseRoom.user1;
             delete responseRoom.user2;
