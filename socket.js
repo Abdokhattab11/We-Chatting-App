@@ -48,7 +48,7 @@ module.exports = (server) => {
                     }
                 }
                 // Will be replaced with a for loop starts from ans to the end of the array
-                for (let i = ans; i < room.messages.length; i++) {
+                for (let i = ans; i < room.messages.length && ans != -1; i++) {
                     const message = room.messages[i];
                     if (userId === message.receiver.toString() && !message.isDelivered) {
                         message.isDelivered = true;
