@@ -80,10 +80,11 @@ module.exports = (server) => {
                 room = await roomModel.findById(roomId).populate('user1 user2');
             } else {
                 log.info(`Chat Room Created Between user ${senderId} & ${receiverId}`);
-                room = await roomModel.create({
+                room = new roomModel({
                     user1: senderId,
                     user2: receiverId,
-                }).populate('user1 user2');
+                });
+                await (await room.save()).populate('user1 user2');
             }
             let start = 0, end = room.messages.length - 1;
             let ans = end;
