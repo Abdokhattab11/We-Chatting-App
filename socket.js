@@ -77,13 +77,13 @@ module.exports = (server) => {
 
             if (roomId) {
                 log.info(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`)
-                room = await roomModel.findById(roomId);
+                room = await roomModel.findById(roomId).populate('user1 user2');
             } else {
                 log.info(`Chat Room Created Between user ${senderId} & ${receiverId}`);
                 room = await roomModel.create({
                     user1: senderId,
                     user2: receiverId,
-                });
+                }).populate('user1 user2');
             }
             let start = 0, end = room.messages.length - 1;
             let ans = end;
@@ -113,6 +113,9 @@ module.exports = (server) => {
                 responseRoom.user = room.user2;
             else
                 responseRoom.user = room.user1;
+
+            delete responseRoom.user1;
+            delete responseRoom.user2;
 
             socket.emit('room_created', responseRoom);
         });
