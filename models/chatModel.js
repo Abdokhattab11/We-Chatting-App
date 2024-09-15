@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const messsageModel = require("./messageModel");
 
 const chatSchema = new mongoose.Schema(
@@ -6,7 +7,6 @@ const chatSchema = new mongoose.Schema(
     roomExternalId: {
       type: String,
       require: true,
-      unique: true,
     },
     user1: {
       type: mongoose.Schema.Types.ObjectId,
@@ -20,42 +20,8 @@ const chatSchema = new mongoose.Schema(
     },
 
     messages: [messsageModel.schema],
+    lastSentMessage: { type: messsageModel.schema, default: null },
 
-    lastSendMessageTime: Date,
-    lastSeenMessage1: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      default: null,
-    },
-    lastDeliveredMessage1: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      default: null,
-    },
-    lastSentMessage1: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      default: null,
-    },
-    lastSeenMessage2: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      default: null,
-    },
-    lastDeliveredMessage2: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      default: null,
-    },
-    lastSentMessage2: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-      default: null,
-    },
-    blocked: {
-      type: Boolean,
-      default: false,
-    },
     createdAt: {
       type: Date,
       default: Date.now,
