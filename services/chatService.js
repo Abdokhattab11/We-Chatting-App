@@ -9,16 +9,11 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
     const token = req.cookies.token;
     const userId = await redisClient.get(token);
 
-    /**
-     * TODO: This Query Needed To Be optimized
-     * */
-
 
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
-        .populate('lastSentMessage')
+        .sort({"lastSentMessage.createdAt": -1})
         .lean();
-
 
     for (const chat of chats) {
         if (chat.user1._id.toString() === userId) {
