@@ -26,7 +26,6 @@ module.exports = (server) => {
         socket.on('connect_user', async (userId) => {
             log.info(`User ${userId} Is Connected To socket ${socket.id}`)
             connectedUsers.add(userId);
-            io.emit('update_online_users', Array.from(connectedUsers));
             socket.userId = userId;
             try {
                 await redisClient.set(userId, socket.id);
@@ -73,6 +72,7 @@ module.exports = (server) => {
                 }
                 await room.save();
             }
+            io.emit('update_online_users', Array.from(connectedUsers));
         });
 
         socket.on('join_create_room', async (creatorInfo) => {
