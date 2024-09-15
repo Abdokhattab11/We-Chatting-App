@@ -309,7 +309,7 @@ module.exports = (server) => {
           "update_online_users",
           Array.from(connectedUsers)
         );
-        io.emit("update_online_users", Array.from(connectedUsers));
+        // io.emit('update_online_users', Array.from(connectedUsers));
       });
     });
     socket.on("message", async (messageData) => {
