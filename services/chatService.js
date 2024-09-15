@@ -12,7 +12,7 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
 
     const chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
-        .sort({"lastSentMessage.createdAt": -1})
+        .sort({"lastSentMessage.createdAt": 1})
         .lean();
 
     for (const chat of chats) {
