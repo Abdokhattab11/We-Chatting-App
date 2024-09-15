@@ -222,7 +222,7 @@ module.exports = (server) => {
             }
             connectedUsers.delete(socket.userId);
             socket.broadcast.emit('update_online_users', Array.from(connectedUsers));
-            io.emit('update_online_users', Array.from(connectedUsers));
+            // io.emit('update_online_users', Array.from(connectedUsers));
         });
     });
     return io;
