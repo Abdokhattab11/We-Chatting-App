@@ -86,9 +86,7 @@ module.exports = (server) => {
       let room;
 
       if (roomId) {
-        log.info(
-          `Chat Room Already Exist Between user ${senderId} & ${receiverId}`
-        );
+        log.info(`Chat Room Already Exist Between user ${senderId} & ${receiverId}`);
         room = await roomModel.findById(roomId).populate("user1 user2");
       } else {
         log.info(`Chat Room Created Between user ${senderId} & ${receiverId}`);

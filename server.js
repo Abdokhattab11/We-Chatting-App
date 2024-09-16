@@ -34,6 +34,6 @@ mongoose
         log.error(`Database connection failed: ${err}`);
     });
 
-server.listen(process.env.PORT || 5000, () => {
+server.listen(process.env.PORT || 3000, () => {
     log.info("Server is running on port 3000");
 });
