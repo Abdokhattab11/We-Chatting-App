@@ -29,6 +29,11 @@ const chatSchema = new mongoose.Schema(
     {timestamps: true}
 );
 
+chatSchema.virtual('numberOfUnseenMessages').get(function () {
+    // `this` refers to the chat document, and we're accessing the messages array
+    return this.messages.filter(message => !message.isSeen).length;
+});
+
 chatSchema.pre('save', function (next) {
     if (this.messages.length > 0) {
         this.lastSentMessage = this.messages[this.messages.length - 1];

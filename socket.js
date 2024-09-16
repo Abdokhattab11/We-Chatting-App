@@ -115,11 +115,13 @@ module.exports = (server) => {
                         message.sender.toString()
                     );
                     const senderSocket = io.sockets.sockets.get(senderSocketId);
-                    senderSocket.emit("message_seen", {roomId, ...message.toObject()});
+                    if (senderSocket)
+                        senderSocket.emit("message_seen", {roomId, ...message.toObject()});
                 }
             }
             await room.save();
             socket.join(roomId);
+            await redisClient.set(`Connected Room ${senderId}`, roomId);
             const responseRoom = room.toObject();
 
             if (receiverId === responseRoom.user1._id) responseRoom.user = room.user1;
@@ -192,31 +194,30 @@ module.exports = (server) => {
         });
         socket.on("is_receiver_connected_to_room", async (data) => {
             // This event will be emitted after is_delivered
-            const {receiverId, roomId, messageId} = data;
-            const room = io.sockets.adapter.rooms.get(roomId);
-            const receiverSocketId = await redisClient.get(receiverId);
+            const {senderId, receiverId, roomId, messageId} = data;
+            // const room = io.sockets.adapter.rooms.get(roomId);
+            // const receiverSocketId = await redisClient.get(receiverId);
+            const test = await redisClient.get(`Connected Room ${senderId}`);
+            const connectRoomOfReceiver = await redisClient.get(`Connected Room ${receiverId}`);
 
-            if (room) {
-                const socketIdsInRoom = Array.from(room);
-                if (socketIdsInRoom.includes(receiverSocketId)) {
-                    // The socket with the specified ID is connected to the room
-                    // Make The Message seen
-                    const room = await roomModel.findById(roomId);
-                    const messageIndex = room.messages.findIndex(
-                        (message) => message._id.toString() === messageId.toString()
-                    );
-                    if (messageIndex !== -1) room.messages[messageIndex].isSeen = true;
-                    await room.save();
-                    const receiverSocketId = await redisClient.get(receiverId);
-                    const receiverSocket = io.sockets.sockets.get(receiverSocketId);
-                    receiverSocket.emit("message_seen", {
-                        roomId,
-                        ...room.messages[messageIndex].toObject(),
-                    });
-                } else {
-                    // The socket with the specified ID is not connected to the room
-                }
+            if (connectRoomOfReceiver === roomId) {
+
+                const room = await roomModel.findById(roomId);
+                const messageIndex = room.messages.findIndex(
+                    (message) => message._id.toString() === messageId.toString()
+                );
+                if (messageIndex !== -1) room.messages[messageIndex].isSeen = true;
+                await room.save();
+                const senderSocketId = await redisClient.get(senderId);
+                const senderSocket = io.sockets.sockets.get(senderSocketId);
+                senderSocket.emit("message_seen", {
+                    roomId,
+                    ...room.messages[messageIndex].toObject(),
+                });
+            } else {
+                // The socket with the specified ID is not connected to the room
             }
+
         });
         socket.on("im_typing", async (data) => {
             const {senderId, receiverId, roomId} = data;
@@ -234,6 +235,7 @@ module.exports = (server) => {
             if (!socket.userId) return;
             try {
                 await redisClient.del(socket.userId);
+                await redisClient.del(`Connected Room ${socket.userId}`);
                 log.info(
                     `User ${socket.userId} Is Disconnected From socket ${socket.id}`
                 );
@@ -249,6 +251,7 @@ module.exports = (server) => {
             if (!socket.userId) return;
             try {
                 await redisClient.del(socket.userId);
+                await redisClient.del(`Connected Room ${socket.userId}`);
                 log.info(
                     `User ${socket.userId} Is Disconnected From socket ${socket.id}`
                 );
