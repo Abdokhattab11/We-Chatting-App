@@ -3,25 +3,26 @@ const getTokenFromHeader = require("../utils/getTokenFromHeader");
 const CustomError = require("../utils/CustomError");
 
 const tokenCheckInRedisMiddleware = async (req, res, next) => {
-    const pathUrl = req.path.toString();
-    if (pathUrl.startsWith("/api/v1/auth")) {
-        next();
-        return;
-    }
-
-    const token = getTokenFromHeader(req);
-
-    if (!token) {
-        next(new CustomError(401, "Authorization Header Missing"));
-        return;
-    }
-    const id = await redisClient.get(token);
-    if (!id) {
-        next(new CustomError(401, "Token Not Exist In Redis"));
-        return;
-    }
-    req.cookies.token = token;
+  const pathUrl = req.path.toString();
+  if (pathUrl.startsWith("/api/v1/auth") || pathUrl.startsWith("/views")) {
     next();
+    return;
+  }
+
+  const token = getTokenFromHeader(req);
+  //console.log("token", token);
+  if (!token) {
+    next(new CustomError(401, "Authorization Header Missing"));
+    return;
+  }
+  const id = await redisClient.get("token");
+  console.log(token);
+  if (!id) {
+    next(new CustomError(401, "Token Not Exist In Redis"));
+    return;
+  }
+  req.cookies.token = token;
+  next();
 };
 
 module.exports = tokenCheckInRedisMiddleware;

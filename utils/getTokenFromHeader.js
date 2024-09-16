@@ -4,7 +4,7 @@ const getTokenFromHeader = (req) => {
     return false;
   }
   if (req.headers.authorization) {
-    return authHeader.substring(7);
+    return authHeader.split(" ")[1];
   } else {
     return authHeader;
   }

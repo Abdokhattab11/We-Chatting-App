@@ -1,27 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Chat Application</title>
     <script src="/socket.io/socket.io.js"></script>
-</head>
-<body>
-<h1>Chat Application</h1>
-<input id="roomNameInput" placeholder="Enter room name to check">
-<button onclick="checkRoom()">Check Room</button>
-<div id="status"></div>
+  </head>
+  <body>
+    <h1>Chat Application</h1>
+    <input id="roomNameInput" placeholder="Enter room name to check" />
+    <button onclick="checkRoom()">Check Room</button>
+    <div id="status"></div>
 
-<script>
-    const socket = io();
+    <script>
+      const socket = io();
 
-    function checkRoom() {
-        const roomName = document.getElementById('roomNameInput').value;
-        socket.emit('check_room', {roomName});
-    }
+      function checkRoom() {
+        const roomName = document.getElementById("roomNameInput").value;
+        socket.emit("check_room", { roomName });
+      }
 
-    socket.on('room_status', ({roomName, status}) => {
-        document.getElementById('status').innerText = `Room ${roomName} status: ${status}`;
-    });
-</script>
-</body>
+      socket.on("room_status", ({ roomName, status }) => {
+        document.getElementById("status").innerText =
+          `Room ${roomName} status: ${status}`;
+      });
+    </script>
+  </body>
 </html>
