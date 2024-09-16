@@ -242,8 +242,22 @@ module.exports = (server) => {
             }
             connectedUsers.delete(socket.userId);
             socket.broadcast.emit("update_online_users", Array.from(connectedUsers));
-            // io.emit('update_online_users', Array.from(connectedUsers));
         });
+        socket.on("disconnect_from_server", async () => {
+            if (!socket.userId) return;
+            try {
+                await redisClient.del(socket.userId);
+                log.info(
+                    `User ${socket.userId} Is Disconnected From socket ${socket.id}`
+                );
+            } catch (e) {
+                log.error(
+                    `Error Occurs when Deleting user socket : {userId:${socket.userId}, socketId:${socket.id}`
+                );
+            }
+            connectedUsers.delete(socket.userId);
+            socket.broadcast.emit("update_online_users", Array.from(connectedUsers));
+        })
     });
     return io;
 };
