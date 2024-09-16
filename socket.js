@@ -28,6 +28,7 @@ module.exports = (server) => {
             socket.userId = userId;
             try {
                 await redisClient.set(userId, socket.id);
+                log.info(`User ${userId} socket Is Saved To Redis`)
             } catch (e) {
                 log.error(
                     `Error : Setting UserId to the connected Socket in Redis Causing Error {userId:${userId}, socketId:${socket.id}`

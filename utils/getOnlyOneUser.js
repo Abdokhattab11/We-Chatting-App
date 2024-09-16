@@ -1,4 +1,4 @@
-const getOnlyOneUserFromChat = (mongoDoc, userId) => {
+exports.getOnlyOneUserFromChat = (mongoDoc, userId) => {
     const chat = mongoDoc.toObject();
     if (chat.user1._id.toString() === userId) {
         chat.user = chat.user1;
@@ -9,4 +9,3 @@ const getOnlyOneUserFromChat = (mongoDoc, userId) => {
     delete chat.user2;
     return chat;
 }
-module.exports = getOnlyOneUserFromChat;
