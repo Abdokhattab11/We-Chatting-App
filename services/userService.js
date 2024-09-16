@@ -31,7 +31,7 @@ exports.updateUserInfo = asyncHandler(async (req, res, next) => {
   const token = req.cookies.token;
   const userId = await redisClient.get(token);
   const body = req.body;
-  console.log(body.photo);
+  console.log(body.photo, userId);
   if (body.photo) {
     const profileImg = `${process.env.BASE_URL}/views/images/userProfiles/${req.body.photo}`;
     body.photo = profileImg;
