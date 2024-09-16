@@ -207,7 +207,9 @@ module.exports = (server) => {
                     );
                     if (messageIndex !== -1) room.messages[messageIndex].isSeen = true;
                     await room.save();
-                    socket.emit("message_seen", {
+                    const receiverSocketId = await redisClient.get(receiverId);
+                    const receiverSocket = io.sockets.sockets.get(receiverSocketId);
+                    receiverSocket.emit("message_seen", {
                         roomId,
                         ...room.messages[messageIndex].toObject(),
                     });
