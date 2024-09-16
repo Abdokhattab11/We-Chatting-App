@@ -1,7 +1,10 @@
 ## Table of contents
 
 * [General info](#general-info)
+* [Features](#features)
 * [Technologies](#technologies)
+* [APIs List](#apis-list)
+* [Socket Events](#sockets-events)
 * [Setup](#setup)
 
 ## General info
@@ -79,7 +82,7 @@ Project is created with:
 To run this project, install it locally using npm:
 
 ```
-$ cd ../lorem
-$ npm install
+Edit .env to meet your configrations 
+$ npm installl
 $ npm start
 ```
