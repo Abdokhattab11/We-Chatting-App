@@ -9,24 +9,30 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
     const token = req.cookies.token;
     const userId = await redisClient.get(token);
 
-    const chats = await chatModel
+    let chats = await chatModel
         .find({$or: [{user1: userId}, {user2: userId}]})
-        .sort({"lastSentMessage.createdAt": -1})
-        .lean();
+        .sort({"lastSentMessage.createdAt": -1});
+
+    const chatResponse = [];
 
     for (const chat of chats) {
+        const chatObject = {};
         if (chat.user1._id.toString() === userId) {
-            chat.user = chat.user2;
+            chatObject.user = chat.user2;
         } else {
-            chat.user = chat.user1;
+            chatObject.user = chat.user1;
         }
-        delete chat.user1;
-        delete chat.user2;
+        chatObject.lastSentMessage = chat.lastSentMessage;
+        chatObject._id = chat._id.toString();
+        chatObject.messages = chat.messages;
+        chatObject.numberOfUnseenMessages = chat.numberOfUnseenMessages;
+
+        chatResponse.push(chatObject);
     }
 
     res.status(200).json({
         status: "Success",
-        chats,
+        chatResponse
     });
 });
 

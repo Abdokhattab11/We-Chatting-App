@@ -26,7 +26,11 @@ const chatSchema = new mongoose.Schema(
             default: Date.now,
         },
     },
-    {timestamps: true}
+    {
+        timestamps: true,
+        toObject: {virtuals: true,},
+        toJSON: {virtuals: true}
+    }
 );
 
 chatSchema.virtual('numberOfUnseenMessages').get(function () {
@@ -50,7 +54,7 @@ chatSchema.pre(/^find/, function (next) {
         path: "user2",
         select: "firstName lastName email photo",
     });
-    this.populate('lastSentMessage')
+    this.populate('lastSentMessage');
     next();
 });
 const Chat = mongoose.model("Chat", chatSchema);
