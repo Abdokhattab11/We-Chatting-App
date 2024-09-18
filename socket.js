@@ -121,7 +121,7 @@ module.exports = (server) => {
             }
             await room.save();
             socket.join(roomId);
-            await redisClient.set(`Connected Room ${senderId}`, roomId);
+            await redisClient.set(`Connected Room ${senderId}`, roomId || room._id.toString());
             const responseRoom = room.toObject();
 
             if (receiverId === responseRoom.user1._id) responseRoom.user = room.user1;
@@ -197,7 +197,6 @@ module.exports = (server) => {
             const {senderId, receiverId, roomId, messageId} = data;
             // const room = io.sockets.adapter.rooms.get(roomId);
             // const receiverSocketId = await redisClient.get(receiverId);
-            const test = await redisClient.get(`Connected Room ${senderId}`);
             const connectRoomOfReceiver = await redisClient.get(`Connected Room ${receiverId}`);
 
             if (connectRoomOfReceiver === roomId) {
