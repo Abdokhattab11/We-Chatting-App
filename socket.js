@@ -219,7 +219,7 @@ module.exports = (server) => {
 
         });
         socket.on("im_typing", async (data) => {
-            const {senderId, receiverId, roomId} = data;
+            const {receiverId, roomId} = data;
 
             const receiverSocketId = await redisClient.get(receiverId);
             const receiverSocket = io.sockets.sockets.get(receiverSocketId);
@@ -229,6 +229,13 @@ module.exports = (server) => {
                 return;
             }
             receiverSocket.emit("is_typing", roomId);
+        });
+        socket.on("disconnect_from_room", async (userId) => {
+            try {
+                await redisClient.del(`Connected Room ${userId}`);
+            } catch (e) {
+                log.warn(`User ${userId} was not connected to room & disconnect_from_room event was emitted`);
+            }
         });
         socket.on("disconnect", async () => {
             if (!socket.userId) return;
