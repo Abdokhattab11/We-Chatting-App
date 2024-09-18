@@ -25,7 +25,9 @@ exports.getAllChats = asyncHandler(async (req, res, next) => {
         chatObject.lastSentMessage = chat.lastSentMessage;
         chatObject._id = chat._id.toString();
         chatObject.messages = chat.messages;
-        chatObject.numberOfUnseenMessages = chat.numberOfUnseenMessages;
+        if (chatObject.lastSentMessage && chatObject.lastSentMessage.receiver._id.toString() === chatObject.user._id.toString())
+            chatObject.numberOfUnseenMessages = chat.numberOfUnseenMessages;
+
 
         chatResponse.push(chatObject);
     }
